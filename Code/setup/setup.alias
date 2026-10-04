@@ -45,9 +45,13 @@ def multiple_match_determine(search_result: list[str], target: str) -> str|None:
             return match
 
 
-def main() -> tuple[str]:
+def main(input_list: list[str]) -> tuple[str]:
 
+    prefix = ctx.prefix
+    footer = f"{prefix}shop [channel ID/'server'] | 10/4/26 | ShadowsStride"
 
+    if len(input_list) == 0:
+        return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Expected channel ID or \'server\'' -color '#CF142B' -thumb ''"
     
 
 
