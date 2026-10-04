@@ -1,0 +1,64 @@
+multiline
+<drac2>
+
+
+def search_list(query: str, item_list: list[str]) -> list[str]|None:
+    """
+    Searches for item in list.
+
+    Args:
+        query (str): The query being made
+        item_list (list): List of items
+
+    Return:
+        list[str]|None: If it finds at least one match, it returns the item(s) in a list, otherwise it returns None
+    """
+
+    # Casefold query (so that number of total case folds is n+1)
+    query = query.casefold()
+
+    # Finds at least 1 match
+    item_results = [item for item in item_list if query in item.casefold()]
+    return item_results or None
+
+
+def multiple_match_determine(search_result: list[str], target: str) -> str|None:
+    """
+    Determines if there is an exact match in search results
+    
+    Args:
+        search_result (list[str]): List of search results
+        target (str): Input value to match
+
+    Returns:
+        str|None: The exact match if found, otherwise None
+    """
+
+    # Casefold target (so that number of total case folds is n+1)
+    target = target.casefold()
+
+    # For each match in search result
+    for match in search_result:
+
+        # If exact match, return match
+        if match.casefold() == target:
+            return match
+
+
+def main() -> tuple[str]:
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+</drac2>
