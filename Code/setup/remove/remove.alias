@@ -51,7 +51,7 @@ def main(input_list: list[str]) -> tuple[str]:
 
         # If the input is not server
         else:
-            return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Expected channel ID or \'server\'' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
+            return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Expected channel ID or \"server\"' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
 
 
     if input_list[0] in svar_dict:
