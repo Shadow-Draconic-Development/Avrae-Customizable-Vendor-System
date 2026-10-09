@@ -1,0 +1,114 @@
+embed
+<drac2>
+
+
+def main() -> tuple[str]:
+    """
+    Main program function
+
+    Return:
+        str: Title
+        str: Main body paragraph
+        str: Color hex code
+        str: Image URL
+    """
+
+    # If vendor SVAR dictionary exists, load dictionary
+    if (svar_dict := get_svar("vendor_gvars")):
+        svar_dict = load_json(svar_dict)
+
+    # If vendor SVAR dictionary does not exist, throw error
+    else:
+        return "You Have Been Sneak Attacked by an Error", "`vendor_gvars` is not setup", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # Try to load character object to get color csetting
+    try:
+        ch = character()
+
+    # If there is no character selected
+    except:
+        color = ""  
+
+    # If not a thread
+    if not (parent_channel := ctx.channel.parent):
+        
+        # If channel is in SVAR dictionary, set channel_id to string form
+        if (channel_id := str(ctx.channel.id)) in svar_dict:
+            channel_id = channel_id
+
+        # If channel is not in SVAR dictionary, set channel_id to Server
+        else:
+            channel_id = "Server"
+
+    # If a thread
+    else:
+
+        # If parent channel is in SVAR dictionary, set channel_id to string form
+        if (channel_id := str(parent_channel.id)) in svar_dict:
+            channel_id = channel_id
+
+        # If parent channel is not in SVAR dictionary, set channel_id to server
+        else:
+            channel_id = "Server"
+
+    # If Server is selected, but not setup
+    if "Server" not in svar_dict and channel_id == "Server":
+        return "You Have Been Sneak Attacked by an Error", "Server vendor is not setup\n\nIf you are trying to add stock to a channel vendor, verify it has been setup", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # Load GVAR dictionary
+    gvar_dict = load_json(get_gvar(svar_dict[channel_id]))
+
+    # Create output list
+    output_list = []
+
+    # For each stock type and cost dictionary in GVAR dictionary
+    for stock_type, cost_dict in gvar_dict.items():
+
+        # Add header
+        output_list.append(f"**{stock_type.capitalize()}:**")
+
+        # Put cost thresholds into a list
+        cost_thresholds = list(cost_dict.keys())
+        
+        # If there are cost thresholds
+        if len(cost_thresholds) > 0:
+
+            # Sort list
+            cost_thresholds.sort(key=float)
+
+            # For each cost threshold in thresholds list
+            for cost_threshold in cost_thresholds:
+
+                # Add cost threshold header
+                output_list.append(f"***{cost_threshold} gp***")
+
+                # For each item in cost group
+                for item in cost_dict[cost_threshold]:
+                    output_list.append(item)
+            
+                # Add spacer
+                output_list.append("")
+
+        # If there are not cost thresholds
+        else:
+            output_list.append("None\n")
+
+    # If a channel vendor
+    if channel_id != "Server":
+        return f"https://discord.com/channels/{ctx.guild.id}/{channel_id} Stock", "\n".join(output_list), color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"
+
+    # If a server vendor
+    else:
+        return "Server-wide Stock", "\n".join(output_list), color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"
+
+
+# Main program function
+title, f, color, thumb = main()
+
+
+</drac2>
+-title "{{title}}"
+-f "{{f}}"
+-color "{{color}}"
+-thumb "{{thumb}}"
+-footer "{{ctx.prefix}}shop stock | 10/7/26 | ShadowsStride"

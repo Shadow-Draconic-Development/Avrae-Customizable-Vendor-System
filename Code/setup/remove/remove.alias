@@ -1,0 +1,84 @@
+multiline
+<drac2>
+
+
+def main(input_list: list[str]) -> tuple[str]:
+    """
+    Main program function
+
+    Args:
+        input_list (list[str]): List of user inputs
+
+    Return:
+        str: Embed string
+        str: SVAR string
+    """
+
+    # Grab server prefix and set footer
+    prefix = ctx.prefix
+    footer = f"{prefix}shop setup remove [channel ID/\"server\"] | 10/4/26 | ShadowsStride"
+
+    # If there were no user inputs
+    if len(input_list) == 0:
+        return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Expected channel ID or \"server\"' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
+
+    # Try to load character object to get color csetting
+    try:
+        ch = character()
+
+    # If there is no character selected
+    except:
+        color = ""
+
+    # If SVAR already exists, load SVAR dictionary
+    if (svar_dict := get_svar("vendor_gvars")):
+        svar_dict = load_json(svar_dict)
+
+    # If SVAR does not exist, return error
+    else:
+        return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'There are no channels to remove (`vendor_gvars` is not setup)' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
+
+    # Try to convert the input into a number
+    try:
+        int(input_list[0])
+
+    # If it is not a number
+    except:
+
+        # If the input is "server"
+        if input_list[0].lower() == "server":
+            input_list[0] = "Server"
+
+        # If the input is not server
+        else:
+            return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Expected channel ID or \'server\'' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
+
+
+    if input_list[0] in svar_dict:
+        gvar = svar_dict.pop(input_list[0])
+
+    else:
+
+        if input_list[0] != "Server":
+            return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'https://discord.com/channels/{ctx.guild.id}/{input_list[0]} vendor has not been setup' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
+
+        # If server wide
+        else:
+            return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Server-wide vendor has not been setup' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
+
+
+    if input_list[0] != "Server":
+        return f"{prefix}embed -title 'Channel vendor successfully removed' -f 'https://discord.com/channels/{ctx.guild.id}/{input_list[0]} : {gvar}' -color '{color}' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png' -footer '{footer}'", f"{prefix}svar vendor_gvars {dump_json(svar_dict)}"
+
+    # If server wide
+    else:
+        return f"{prefix}embed -title 'Server-wide vendor successfully removed' -f '{gvar}' -color '{color}' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png' -footer '{footer}'", f"{prefix}svar vendor_gvars {dump_json(svar_dict)}"
+
+
+# Main program function
+embed_str, svar_str = main(&ARGS&)
+
+
+</drac2>
+{{embed_str}}
+{{svar_str}}

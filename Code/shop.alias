@@ -1,0 +1,243 @@
+embed
+<drac2>
+
+
+def search_list(query: str, item_list: list[str]) -> list[str]|None:
+    """
+    Searches for item in list.
+
+    Args:
+        query (str): The query being made
+        item_list (list): List of items
+
+    Return:
+        list[str]|None: If it finds at least one match, it returns the item(s) in a list, otherwise it returns None
+    """
+
+    # Casefold query (so that number of total case folds is n+1)
+    query = query.casefold()
+
+    # Finds at least 1 match
+    item_results = [item for item in item_list if query in item.casefold()]
+    return item_results or None
+
+
+def multiple_match_determine(search_result: list[str], target: str) -> str|None:
+    """
+    Determines if there is an exact match in search results
+    
+    Args:
+        search_result (list[str]): List of search results
+        target (str): Input value to match
+
+    Returns:
+        str|None: The exact match if found, otherwise None
+    """
+
+    # Casefold target (so that number of total case folds is n+1)
+    target = target.casefold()
+
+    # For each match in search result
+    for match in search_result:
+
+        # If exact match, return match
+        if match.casefold() == target:
+            return match
+
+
+def main(input_list: list[str]) -> tuple[str]:
+    """
+    Main program function
+
+    Args:
+        input_list (list[str]): List of user inputs
+
+    Return:
+        str: Title
+        str: Main body paragraph
+        str: Color hex code
+        str: Image URL
+    """
+
+    # If vendor SVAR dictionary exists, load dictionary
+    if (svar_dict := get_svar("vendor_gvars")):
+        svar_dict = load_json(svar_dict)
+
+    # If vendor SVAR dictionary does not exist, throw error
+    else:
+        return "You Have Been Sneak Attacked by an Error", "`vendor_gvars` is not setup", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # Try to load character object to get color csetting
+    try:
+        ch = character()
+
+    # If there is no character selected
+    except:
+        return "You Have Been Sneak Attacked by an Error", "You must have a character selected", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"  
+
+    # If not a thread
+    if not (parent_channel := ctx.channel.parent):
+        
+        # If channel is in SVAR dictionary, set channel_id to string form
+        if (channel_id := str(ctx.channel.id)) in svar_dict:
+            channel_id = channel_id
+
+        # If channel is not in SVAR dictionary, set channel_id to Server
+        else:
+            channel_id = "Server"
+
+    # If a thread
+    else:
+
+        # If parent channel is in SVAR dictionary, set channel_id to string form
+        if (channel_id := str(parent_channel.id)) in svar_dict:
+            channel_id = channel_id
+
+        # If parent channel is not in SVAR dictionary, set channel_id to server
+        else:
+            channel_id = "Server"
+
+    # If Server is selected, but not setup
+    if "Server" not in svar_dict and channel_id == "Server":
+        return "You Have Been Sneak Attacked by an Error", "Server vendor is not setup\n\nIf you are trying to add stock to a channel vendor, verify it has been setup", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # Load GVAR dictionary
+    gvar_dict = load_json(get_gvar(svar_dict[channel_id]))
+
+    # If no inputs are provided
+    if len(input_list) == 0:
+
+        # Create output list
+        output_list = []
+
+        # For each stock type and cost dictionary in GVAR dictionary
+        for stock_type, cost_dict in gvar_dict.items():
+
+            # Add header
+            output_list.append(f"**{stock_type.capitalize()}:**")
+
+            # Put cost thresholds into a list
+            costs = list(cost_dict.keys())
+            
+            # If there are cost thresholds
+            if len(costs) > 0:
+
+                # Sort list
+                costs.sort(key=float)
+
+                # For each cost threshold in thresholds list
+                for cost in costs:
+
+                    # Add cost threshold header
+                    output_list.append(f"***{cost} gp***")
+
+                    # For each item in cost group
+                    for item in cost_dict[cost]:
+                        output_list.append(item)
+                
+                    # Add spacer
+                    output_list.append("")
+
+            # If there are not cost thresholds
+            else:
+                output_list.append("None\n")
+
+        # If a channel vendor
+        if channel_id != "Server":
+            return f"https://discord.com/channels/{ctx.guild.id}/{channel_id} Stock", "\n".join(output_list), color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"
+
+        # If a server vendor
+        else:
+            return "Server-wide Stock", "\n".join(output_list), color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"
+
+    # If at least one input is provided
+    else:
+
+        # Rearrange GVAR to be better suited for item buying
+        rearranged_gvar_dict = {}
+
+        # For each stock type and cost dictionary in GVAR dictionary
+        for stock_type, cost_dict in gvar_dict.items():
+
+            # For each cost and item list
+            for cost, item_list in cost_dict.items():
+
+                # For each item in item list
+                for item in item_list:
+
+                    # If item not already in rearranged GVAR dictionary, add it
+                    if not (lower_item := item.casefold()) in rearranged_gvar_dict:
+                        rearranged_gvar_dict[lower_item] = [cost, stock_type]
+
+                    # If item is already in rearranged GVAR dictionary, if cheaper update cost and stock
+                    elif float(cost) < float(rearranged_gvar_dict[lower_item][0]):
+                        rearranged_gvar_dict[lower_item] = [cost, stock_type]
+
+        # Search for item in new GVAR dictionary, if it finds at least one match
+        if (search_result := search_list(input_list[0], rearranged_gvar_dict.keys())):
+
+            # If it finds exactly one match
+            if len(search_result) == 1:
+                input_list[0] = search_result[0]
+
+            # If it finds more than one match
+            else:
+
+                # If it finds an exact match
+                if (search_result2 := multiple_match_determine(search_result, input_list[0])):
+                    input_list[0] = search_result2
+
+                # If it doesn't finds an exact match
+                else:
+                    search_result.insert(0, "**Multiple Items Found:**")
+
+                    return "You Have Been Sneak Attacked by an Error", "\n".join(search_result), "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+        # If no matches are found
+        else:
+            return "You Have Been Sneak Attacked by an Error", f"Item not found (`{input_list[0]}`)", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # Grab coin purse object
+    coin_purse = ch.coinpurse
+
+    # If cost of item is less than or equal to money in coin purse
+    if (cost := float(rearranged_gvar_dict[input_list[0]][0])) <= coin_purse.total:
+
+        # Separate out whole number from decimal
+        whole, _, decimal = f"{cost:.2f}".partition(".")
+
+        # Subtract coins from coin purse
+        delta = coin_purse.modify_coins(
+            gp= int(whole) * -1,
+            sp= int(decimal[0]) * -1,
+            cp= int(decimal[1]) * -1 
+        )
+
+        # If cost is a whole number
+        if floor(cost) == cost:
+            cost = int(cost)
+
+        # If a channel vendor
+        if channel_id != "Server":
+            return f"https://discord.com/channels/{ctx.guild.id}/{channel_id} Vendor", f"{input_list[0].capitalize()} purchased\n\n(Inform the shop keeper)\n\n{coin_purse.total:,.2f}gp (-{cost:,})", color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"
+
+        # If a server vendor
+        else:
+            return "Server-wide Vendor", f"{input_list[0].capitalize()} purchased\n\n(Inform the shop keeper)\n\n{coin_purse.total:,.2f}gp (-{cost:,})", color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"      
+
+    # If the character does not have enough money to buy the item
+    else:
+        return "You Have Been Sneak Attacked by an Error", "You do not have enough money for that item", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+
+# Main program function
+title, f, color, thumb = main(&ARGS&)
+l = "<"
+
+
+</drac2>
+-title "{{title}}"
+-f "{{f}}"
+-color "{{color}}"
+-thumb "{{thumb}}"
+-footer "{{ctx.prefix}}shop {{l}}item name> | 10/8/26 | ShadowsStride"

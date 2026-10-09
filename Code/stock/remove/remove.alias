@@ -1,0 +1,239 @@
+embed
+<drac2>
+
+
+def search_list(query: str, item_list: list[str]) -> list[str]|None:
+    """
+    Searches for item in list.
+
+    Args:
+        query (str): The query being made
+        item_list (list): List of items
+
+    Return:
+        list[str]|None: If it finds at least one match, it returns the item(s) in a list, otherwise it returns None
+    """
+
+    # Casefold query (so that number of total case folds is n+1)
+    query = query.casefold()
+
+    # Finds at least 1 match
+    item_results = [item for item in item_list if query in item.casefold()]
+    return item_results or None
+
+
+def multiple_match_determine(search_result: list[str], target: str) -> str|None:
+    """
+    Determines if there is an exact match in search results
+    
+    Args:
+        search_result (list[str]): List of search results
+        target (str): Input value to match
+
+    Returns:
+        str|None: The exact match if found, otherwise None
+    """
+
+    # Casefold target (so that number of total case folds is n+1)
+    target = target.casefold()
+
+    # For each match in search result
+    for match in search_result:
+
+        # If exact match, return match
+        if match.casefold() == target:
+            return match
+
+
+def main(input_list: list[str]) -> tuple[str]:
+    """
+    Main program function
+
+    Args:
+        input_list (list[str]): List of user inputs
+
+    Return:
+        str: Title
+        str: Main body paragraph
+        str: Color hex code
+        str: Image URL
+    """
+
+    # If vendor SVAR dictionary exists, load dictionary
+    if (svar_dict := get_svar("vendor_gvars")):
+        svar_dict = load_json(svar_dict)
+
+    # If vendor SVAR dictionary does not exist, throw error
+    else:
+        return "You Have Been Sneak Attacked by an Error", "`vendor_gvars` is not setup", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+
+    # # If roles SVAR dictionary exists
+    # if (roles_dict := get_svar("vendor_roles")):
+
+    #     # Load dictionary and remove any entries that have an empty roles list (if any)
+    #     roles_dict = {
+    #         channel_id: roles_list
+    #         for channel_id, roles_list in load_json(roles_dict).items()
+    #         if roles_list
+    #     }
+
+    # # If roles SVAR dictionary exists, load dictionary
+    # else:
+    #     vendor_roles = {}
+
+    # Try to load character object to get color csetting
+    try:
+        ch = character()
+
+    # If there is no character selected
+    except:
+        color = ""  
+
+    # If length of inputs is less than 3
+    if len(input_list) < 3:
+        return "You Have Been Sneak Attacked by an Error", "Expected Item name, item cost, and stock type (limited/permanent)", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # Try to convert gold cost into a float and make it positive, rounding it to two decimal places
+    try:
+        input_list[1] = abs(round(float(input_list[1]), 2))
+
+        # Turn into integer if number is a whole number
+        if floor(input_list[1]) == input_list[1]:
+            input_list[1] = int(floor(input_list[1]))
+
+    # If input was not a float
+    except:
+        return "You Have Been Sneak Attacked by an Error", "Item cost (in GP) must be numbers only", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # If stock type is valid (permanent or limited)
+    if (search_result := search_list(input_list[2], ["permanent", "limited"])):
+
+        # If it finds an exact match
+        if len(search_result) == 1:
+            input_list[2] = search_result[0]
+
+        # If it doesn't find an exact match
+        else:
+            return "You Have Been Sneak Attacked by an Error", "Expected stock type (limited/permanent)", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # If stock type is invalid
+    else:
+        return "You Have Been Sneak Attacked by an Error", "Expected stock type (limited/permanent)", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # If not a thread
+    if not (parent_channel := ctx.channel.parent):
+        
+        # If channel is in SVAR dictionary, set channel_id to string form
+        if (channel_id := str(ctx.channel.id)) in svar_dict:
+            channel_id = channel_id
+
+        # If channel is not in SVAR dictionary, set channel_id to Server
+        else:
+            channel_id = "Server"
+
+    # If a thread
+    else:
+
+        # If parent channel is in SVAR dictionary, set channel_id to string form
+        if (channel_id := str(parent_channel.id)) in svar_dict:
+            channel_id = channel_id
+
+        # If parent channel is not in SVAR dictionary, set channel_id to server
+        else:
+            channel_id = "Server"
+
+    # If Server is selected, but not setup
+    if "Server" not in svar_dict and channel_id == "Server":
+        return "You Have Been Sneak Attacked by an Error", "Server vendor is not setup\n\nIf you are trying to add stock to a channel vendor, verify it has been setup", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # # If channel_id/"Server" in roles dictionary
+    # if channel_id in roles_dict:
+
+    #     # Grab user's roles
+    #     user_roles = set(str(role).casefold() for role in ctx.author.get_roles())
+
+    #     # If Server in roles dictionary
+    #     if "Server" in roles_dict:
+    #         valid_roles = {role.casefold() for role in vendor_roles[channel_id]} | {role.casefold() for role in vendor_roles["Server"]}
+
+    #     # If Server not in roles dictionary
+    #     else:
+    #         valid_roles = {role.casefold() for role in vendor_roles[channel_id]}
+
+    #     # If no roles align
+    #     if len(user_roles & valid_roles) == 0:
+    #         return "You Have Been Sneak Attacked by an Error", "You do not have a sufficient role in order to run this", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # Load GVAR dictionary
+    gvar_dict = load_json(get_gvar(svar_dict[channel_id]))
+
+    # If coin string in stock-type
+    if (coin_str := str(input_list[1])) in gvar_dict[input_list[2]]:
+
+        # Search the coin string list for the specified item
+        if (search_result := search_list(input_list[0], gvar_dict[input_list[2]][coin_str])):
+
+            # If it finds exactly one match
+            if len(search_result) == 1:
+                input_list[0] = search_result[0]
+
+            # If it finds more than one match
+            else:
+
+                # If it finds an exact match
+                if (search_result2 := multiple_match_determine(search_result, input_list[0])):
+                    input_list[0] = search_result2
+
+                # If it doesn't find an exact match
+                else:
+                    search_result.insert(0, "**Multiple Items Found:**")
+
+                    return "You Have Been Sneak Attacked by an Error", "\n".join(search_result), "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+        # If it doesn't find any matching items
+        else:
+            return "You Have Been Sneak Attacked by an Error", f"No Items Found under that price (`{input_list[0]}`)", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+        # Remove item from coin string list
+        gvar_dict[input_list[2]][coin_str].pop(gvar_dict[input_list[2]][coin_str].index(input_list[0]))
+
+    # If coin string not in stock-type
+    else:
+        return "You Have Been Sneak Attacked by an Error", f"There is no item that costs that much under the {input_list[2]} stock-type", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # Clean up empty lists within coin strings
+    for stock_type, stock_dict in gvar_dict.items():
+        gvar_dict[stock_type] = {coin_str: stock_list for coin_str, stock_list in stock_dict.items() if stock_list}
+
+    # Try to set GVAR to new value
+    try:
+        set_gvar(svar_dict[channel_id], dump_json(gvar_dict))
+
+    # If the person running this does not have editor permissions
+    except:
+
+        # If location is a channel
+        if channel_id != "Server":
+            location = "channel"
+
+        # If location is server-wide
+        else:
+            location = "server"
+
+        return "You Have Been Sneak Attacked by an Error", f"You do not have editor rights for this {location}-wide vendor. Verify with the one who setup the GVAR that you have editor rights", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+
+    return "Stock Removed", f"**Item Name:** {input_list[0]}\n**Item Cost (in gp):** {input_list[1]}\n**Stock Type:** {input_list[2]}", color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"
+
+
+# Main program function
+title, f, color, thumb = main(&ARGS&)
+
+
+</drac2>
+-title "{{title}}"
+-f "{{f}}"
+-color "{{color}}"
+-thumb "{{thumb}}"
+-footer "{{ctx.prefix}}shop stock remove [Item name] [Item Cost] [limited/permanent] | 10/6/26 | ShadowsStride"

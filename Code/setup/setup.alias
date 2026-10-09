@@ -2,67 +2,90 @@ multiline
 <drac2>
 
 
-def search_list(query: str, item_list: list[str]) -> list[str]|None:
+def main(input_list: list[str]) -> tuple[str]:
     """
-    Searches for item in list.
+    Main program function
 
     Args:
-        query (str): The query being made
-        item_list (list): List of items
+        input_list (list[str]): List of user inputs
 
     Return:
-        list[str]|None: If it finds at least one match, it returns the item(s) in a list, otherwise it returns None
+        str: Embed string
+        str: SVAR string
     """
 
-    # Casefold query (so that number of total case folds is n+1)
-    query = query.casefold()
-
-    # Finds at least 1 match
-    item_results = [item for item in item_list if query in item.casefold()]
-    return item_results or None
-
-
-def multiple_match_determine(search_result: list[str], target: str) -> str|None:
-    """
-    Determines if there is an exact match in search results
-    
-    Args:
-        search_result (list[str]): List of search results
-        target (str): Input value to match
-
-    Returns:
-        str|None: The exact match if found, otherwise None
-    """
-
-    # Casefold target (so that number of total case folds is n+1)
-    target = target.casefold()
-
-    # For each match in search result
-    for match in search_result:
-
-        # If exact match, return match
-        if match.casefold() == target:
-            return match
-
-
-def main(input_list: list[str]) -> tuple[str]:
-
+    # Grab server prefix and set footer
     prefix = ctx.prefix
-    footer = f"{prefix}shop [channel ID/'server'] | 10/4/26 | ShadowsStride"
+    footer = f"{prefix}shop setup [channel ID/\"server\"] | 10/4/26 | ShadowsStride"
 
+    # If there were no user inputs
     if len(input_list) == 0:
-        return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Expected channel ID or \'server\'' -color '#CF142B' -thumb ''"
-    
+        return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Expected channel ID or \"server\"' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
+
+    # Try to load character object to get color csetting
+    try:
+        ch = character()
+
+    # If there is no character selected
+    except:
+        color = ""
+
+    # If SVAR already exists, load SVAR dictionary
+    if (svar_dict := get_svar("vendor_gvars")):
+        svar_dict = load_json(svar_dict)
+
+    # If SVAR does not exist, load empty dictionary
+    else:
+        svar_dict = {}
+
+    # Try to convert the input into a number
+    try:
+        int(input_list[0])
+
+    # If it is not a number
+    except:
+
+        # If the input is "server"
+        if input_list[0].lower() == "server":
+            input_list[0] = "Server"
+
+        # If the input is not server
+        else:
+            return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Expected channel ID or \'server\'' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
+
+    # If input is already present in SVAR dict
+    if input_list[0] in svar_dict:
+
+        # If channel ID was provided
+        if input_list[0] != "Server":
+            return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'https://discord.com/channels/{ctx.guild.id}/{input_list[0]} is already setup' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
+
+        # If server was provided
+        else:
+            return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Server-wide is already setup' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
+
+    # Default GVAR dictionary
+    gvar_dict = {
+        "permanent": {},
+        "limited": {}
+    }
+
+    # Create new GVAR, make it script writable, then set it as the value of the channel ID/server
+    svar_dict[input_list[0]] = create_gvar(dump_json(gvar_dict), script_writable=True)
+
+    # If input was a channel ID, provide discord link to server channel
+    if input_list[0] != "Server":
+        return f"{prefix}embed -title 'GVAR successfully created' -f 'https://discord.com/channels/{ctx.guild.id}/{input_list[0]} vendor has been added (if this link is invalid, you may have entered in the incorrect channel ID)\nNow you will need to run `!gvar editor {svar_dict[input_list[0]]} @person` for each person you want running this channel vendor' -color '{color}' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png' -footer '{footer}'", f"{prefix}svar vendor_gvars {dump_json(svar_dict)}"
+
+    # If server wide
+    else:
+        return f"{prefix}embed -title 'GVAR successfully created' -f 'Server-wide vendor has been added\nNow you will need to run `!gvar editor {svar_dict[input_list[0]]} @person` for each person you want running the server-wide vendor' -color '{color}' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png' -footer '{footer}'", f"{prefix}svar vendor_gvars {dump_json(svar_dict)}"
 
 
-
-
-
-
-
-
-
-
+# Main program function
+embed_str, svar_str = main(&ARGS&)
 
 
 </drac2>
+{{embed_str}}
+{{svar_str}}
