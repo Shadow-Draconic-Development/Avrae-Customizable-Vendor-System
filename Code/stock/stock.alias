@@ -61,37 +61,44 @@ def main() -> tuple[str]:
     # Create output list
     output_list = []
 
-    # For each stock type and cost dictionary in GVAR dictionary
-    for stock_type, cost_dict in gvar_dict.items():
+    # If GVAR dictionary is empty
+    if len(gvar_dict) > 0:   
 
-        # Add header
-        output_list.append(f"**{stock_type.capitalize()}:**")
+        # For each stock type and cost dictionary in GVAR dictionary
+        for stock_type, cost_dict in gvar_dict.items():
 
-        # Put cost thresholds into a list
-        cost_thresholds = list(cost_dict.keys())
-        
-        # If there are cost thresholds
-        if len(cost_thresholds) > 0:
+            # Add header
+            output_list.append(f"**{stock_type.capitalize()}:**")
 
-            # Sort list
-            cost_thresholds.sort(key=float)
-
-            # For each cost threshold in thresholds list
-            for cost_threshold in cost_thresholds:
-
-                # Add cost threshold header
-                output_list.append(f"***{cost_threshold} gp***")
-
-                # For each item in cost group
-                for item in cost_dict[cost_threshold]:
-                    output_list.append(item)
+            # Put cost thresholds into a list
+            cost_thresholds = list(cost_dict.keys())
             
-                # Add spacer
-                output_list.append("")
+            # If there are cost thresholds
+            if len(cost_thresholds) > 0:
 
-        # If there are not cost thresholds
-        else:
-            output_list.append("None\n")
+                # Sort list
+                cost_thresholds.sort(key=float)
+
+                # For each cost threshold in thresholds list
+                for cost_threshold in cost_thresholds:
+
+                    # Add cost threshold header
+                    output_list.append(f"***{cost_threshold} gp***")
+
+                    # For each item in cost group
+                    for item in cost_dict[cost_threshold]:
+                        output_list.append(item)
+                
+                    # Add spacer
+                    output_list.append("")
+
+            # If there are not cost thresholds
+            else:
+                output_list.append("None\n")
+
+    # If GVAR dictionary is not empty
+    else:
+        output_list.append("None")
 
     # If a channel vendor
     if channel_id != "Server":

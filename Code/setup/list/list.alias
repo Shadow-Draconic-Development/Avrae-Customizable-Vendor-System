@@ -1,0 +1,62 @@
+embed
+<drac2>
+
+
+def main() -> tuple[str]:
+    """
+    Main program function
+
+    Return:
+        str: Title
+        str: Main body paragraph
+        str: Color hex code
+        str: Thumbnail URL
+    """
+
+    # Try to load character object to get color csetting
+    try:
+        ch = character()
+
+    # If there is no character selected
+    except:
+        color = ""
+
+    # If SVAR already exists, load SVAR dictionary
+    if (svar_dict := get_svar("vendor_gvars")):
+        svar_dict = load_json(svar_dict)
+
+    # If SVAR does not exist, load empty dictionary
+    else:
+        return "Vendors", "None", color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"
+
+    # If SVAR is empty
+    if len(svar_dict) == 0:
+        return "Vendors", "None", color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"
+
+    # Create output list
+    output_list = []
+
+    # For channel ID, GVAR string in SVAR dictionary
+    for channel, gvar_str in svar_dict.items():
+
+        # If a channel
+        if channel != "Server":
+            output_list.append(f"https://discord.com/channels/{ctx.guild.id}/{channel} `{gvar_str}`")
+
+        # If a server
+        else:
+            output_list.insert(0, f"Server {gvar_str}")
+
+    return "Vendors", "\n".join(output_list), color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"
+
+
+# Main program function
+title, f, color, thumb = main()
+
+
+</drac2>
+-title "{{title}}"
+-f "{{f}}"
+-color "{{color}}"
+-thumb "{{thumb}}"
+-footer "{{ctx.prefix}}shop setup list | 10/9/26 | ShadowsStride"

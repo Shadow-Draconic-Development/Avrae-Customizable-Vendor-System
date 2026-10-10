@@ -92,7 +92,7 @@ def main(input_list: list[str]) -> tuple[str]:
 
     # If length of inputs is less than 3
     if len(input_list) < 3:
-        return "You Have Been Sneak Attacked by an Error", "Expected Item name, item cost, and stock type (limited/permanent)", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+        return "You Have Been Sneak Attacked by an Error", "Expected Item name, item cost, and item category", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
 
     # Try to convert gold cost into a float and make it positive, rounding it to two decimal places
     try:
@@ -105,21 +105,6 @@ def main(input_list: list[str]) -> tuple[str]:
     # If input was not a float
     except:
         return "You Have Been Sneak Attacked by an Error", "Item cost (in GP) must be numbers only", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
-
-    # If stock type is valid (permanent or limited)
-    if (search_result := search_list(input_list[2], ["permanent", "limited"])):
-
-        # If it finds an exact match
-        if len(search_result) == 1:
-            input_list[2] = search_result[0]
-
-        # If it doesn't find an exact match
-        else:
-            return "You Have Been Sneak Attacked by an Error", "Expected stock type (limited/permanent)", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
-
-    # If stock type is invalid
-    else:
-        return "You Have Been Sneak Attacked by an Error", "Expected stock type (limited/permanent)", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
 
     # If not a thread
     if not (parent_channel := ctx.channel.parent):
@@ -168,7 +153,35 @@ def main(input_list: list[str]) -> tuple[str]:
     # Load GVAR dictionary
     gvar_dict = load_json(get_gvar(svar_dict[channel_id]))
 
-    # If coin string in stock-type
+    # If GVAR is empty
+    if len(gvar_dict) == 0:
+        return "You Have Been Sneak Attacked by an Error", "This vendor's stock is empty already", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # Search for item category
+    if (search_result := search_list(input_list[2], gvar_dict.keys())):
+
+        # If it finds exactly one match
+        if len(search_result) == 1:
+            input_list[2] = search_result[0]
+
+        # If it finds more than one match
+        else:
+
+            # If it finds an exact match
+            if (search_result2 := multiple_match_determine(search_result, input_list[2])):
+                input_list[2] = search_result2
+
+            # If it does not find an exact match
+            else:
+                search_result.insert(0, "**Multiple Item Categories Found:**")
+
+                return "You Have Been Sneak Attacked by an Error", "\n".join(search_result), "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # If it does not find any item categories
+    else:
+        return "You Have Been Sneak Attacked by an Error", f"Item category not found (`{input_list[2]}`)", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+
+    # If coin string in item category
     if (coin_str := str(input_list[1])) in gvar_dict[input_list[2]]:
 
         # Search the coin string list for the specified item
@@ -198,13 +211,16 @@ def main(input_list: list[str]) -> tuple[str]:
         # Remove item from coin string list
         gvar_dict[input_list[2]][coin_str].pop(gvar_dict[input_list[2]][coin_str].index(input_list[0]))
 
-    # If coin string not in stock-type
+    # If coin string not in item category
     else:
-        return "You Have Been Sneak Attacked by an Error", f"There is no item that costs that much under the {input_list[2]} stock-type", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
+        return "You Have Been Sneak Attacked by an Error", f"There is no item that costs that much under the {input_list[2].capitalize()} item category", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
 
     # Clean up empty lists within coin strings
-    for stock_type, stock_dict in gvar_dict.items():
-        gvar_dict[stock_type] = {coin_str: stock_list for coin_str, stock_list in stock_dict.items() if stock_list}
+    for item_category, item_category_dict in gvar_dict.items():
+        gvar_dict[item_category] = {coin_str: stock_list for coin_str, stock_list in item_category_dict.items() if stock_list}
+
+    # Clean up empty item categories
+    gvar_dict = {item_category: item_category_dict for item_category, item_category_dict in gvar_dict.items() if item_category_dict}
 
     # Try to set GVAR to new value
     try:
@@ -224,7 +240,7 @@ def main(input_list: list[str]) -> tuple[str]:
         return "You Have Been Sneak Attacked by an Error", f"You do not have editor rights for this {location}-wide vendor. Verify with the one who setup the GVAR that you have editor rights", "#CF142B", "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png"
 
 
-    return "Stock Removed", f"**Item Name:** {input_list[0]}\n**Item Cost (in gp):** {input_list[1]}\n**Stock Type:** {input_list[2]}", color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"
+    return "Stock Removed", f"**Item Name:** {input_list[0]}\n**Item Cost (in gp):** {input_list[1]}\n**Item Category:** {input_list[2].capitalize()}", color, "https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png"
 
 
 # Main program function
@@ -236,4 +252,4 @@ title, f, color, thumb = main(&ARGS&)
 -f "{{f}}"
 -color "{{color}}"
 -thumb "{{thumb}}"
--footer "{{ctx.prefix}}shop stock remove [Item name] [Item Cost] [limited/permanent] | 10/6/26 | ShadowsStride"
+-footer "{{ctx.prefix}}shop stock remove [Item name] [Item Cost] [Item Category] | 10/9/26 | ShadowsStride"

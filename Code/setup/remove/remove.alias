@@ -53,12 +53,14 @@ def main(input_list: list[str]) -> tuple[str]:
         else:
             return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Expected channel ID or \"server\"' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
 
-
+    # If channel/server entry exists
     if input_list[0] in svar_dict:
         gvar = svar_dict.pop(input_list[0])
 
+    # If channel/server entry does not exist
     else:
 
+        # If it is a channel
         if input_list[0] != "Server":
             return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'https://discord.com/channels/{ctx.guild.id}/{input_list[0]} vendor has not been setup' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
 
@@ -66,7 +68,7 @@ def main(input_list: list[str]) -> tuple[str]:
         else:
             return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Server-wide vendor has not been setup' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
 
-
+    # If a channel
     if input_list[0] != "Server":
         return f"{prefix}embed -title 'Channel vendor successfully removed' -f 'https://discord.com/channels/{ctx.guild.id}/{input_list[0]} : {gvar}' -color '{color}' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/main.png' -footer '{footer}'", f"{prefix}svar vendor_gvars {dump_json(svar_dict)}"
 

@@ -24,7 +24,7 @@ def main(input_list: list[str]) -> tuple[str]:
 
     # Try to load character object to get color csetting
     try:
-        ch = character()
+        ch = character()x
 
     # If there is no character selected
     except:
@@ -64,14 +64,8 @@ def main(input_list: list[str]) -> tuple[str]:
         else:
             return f"{prefix}embed -title 'You Have Been Sneak Attacked by an Error' -f 'Server-wide is already setup' -color '#CF142B' -thumb 'https://raw.githubusercontent.com/Shadow-Draconic-Development/Avrae-Customizable-Vendor-System/refs/heads/main/Data/images/error.png' -footer '{footer}'", ""
 
-    # Default GVAR dictionary
-    gvar_dict = {
-        "permanent": {},
-        "limited": {}
-    }
-
     # Create new GVAR, make it script writable, then set it as the value of the channel ID/server
-    svar_dict[input_list[0]] = create_gvar(dump_json(gvar_dict), script_writable=True)
+    svar_dict[input_list[0]] = create_gvar("{}", script_writable=True)
 
     # If input was a channel ID, provide discord link to server channel
     if input_list[0] != "Server":
