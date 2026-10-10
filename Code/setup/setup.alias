@@ -24,7 +24,7 @@ def main(input_list: list[str]) -> tuple[str]:
 
     # Try to load character object to get color csetting
     try:
-        ch = character()x
+        ch = character()
 
     # If there is no character selected
     except:
